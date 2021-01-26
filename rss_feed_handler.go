@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -88,7 +89,7 @@ func loadTemplate() *template.Template {
 	return t
 }
 
-func main() {
+func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	// Load RSS Feed URLs
 	rssFeeds, err := loadConfig("configs/feeds.json")
 	if err != nil {

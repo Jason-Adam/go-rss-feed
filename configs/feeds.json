@@ -9,6 +9,9 @@
         "http://feeds.feedburner.com/blogspot/gJZg",
         "http://feeds.feedburner.com/GDBcode",
         "https://martinfowler.com/feed.atom",
-        "https://www.toptal.com/blog.rss"
+        "https://www.toptal.com/blog.rss",
+        "https://openai.com/blog/rss/",
+        "https://news.mit.edu/rss/topic/machine-learning",
+        "https://mlfromscratch.com/rss/"
     ]
 }
