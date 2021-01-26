@@ -26,18 +26,23 @@ var (
 func loadConfig(fname string) (*models.RSSFeeds, error) {
 	jsonFile, err := os.Open(fname)
 	if err != nil {
-		log.Println(err)
+		log.Printf("unable to open config file due to error: %s", err)
 		return nil, err
 	}
 	defer jsonFile.Close()
 
 	byteValue, readErr := ioutil.ReadAll(jsonFile)
 	if readErr != nil {
-		log.Fatal(err)
+		log.Printf("unable to read config file due to error: %s", readErr)
+		return nil, readErr
 	}
 
 	var feeds models.RSSFeeds
-	json.Unmarshal(byteValue, &feeds)
+	uErr := json.Unmarshal(byteValue, &feeds)
+	if uErr != nil {
+		log.Printf("unable to unmarshal config into struct due to error: %s", uErr)
+		return nil, uErr
+	}
 
 	return &feeds, nil
 }
@@ -46,11 +51,14 @@ func filterFeed(feed *gofeed.Feed) {
 	cutoff := time.Now().Add(-24 * time.Hour)
 	filtered := []*gofeed.Item{}
 
-	for _, f := range feed.Items {
-		if time.Time(*f.PublishedParsed).After(cutoff) {
-			filtered = append(filtered, f)
+	if feed.Len() > 0 {
+		for _, f := range feed.Items {
+			if f.PublishedParsed != nil && time.Time(*f.PublishedParsed).After(cutoff) {
+				filtered = append(filtered, f)
+			}
 		}
 	}
+
 	feed.Items = filtered
 	return
 }
@@ -62,6 +70,7 @@ func parseFeed(url string, feedchan chan *gofeed.Feed) {
 		log.Printf("failed to parse %s", url)
 		return
 	}
+	log.Printf("successfully parsed feed %s", url)
 	feedchan <- feed
 }
 
@@ -79,21 +88,30 @@ func parseFeeds(urls []string) []*gofeed.Feed {
 	return feeds
 }
 
-func loadTemplate() *template.Template {
+func loadTemplate() (*template.Template, error) {
 	templates, err := filepath.Glob("templates/*")
 	if err != nil {
-		log.Println(err)
+		log.Printf("unable to load templates due to error: %s", err)
+		return nil, err
 	}
-	t := template.Must(template.New("layout.go.html").ParseFiles(templates...))
-	return t
+
+	tt, pErr := template.New("layout.go.html").ParseFiles(templates...)
+	if pErr != nil {
+		log.Printf("unable to generate template due to parse error: %s", pErr)
+		return nil, pErr
+	}
+
+	t := template.Must(tt, nil)
+	return t, nil
 }
 
 func main() {
 	// Load RSS Feed URLs
 	rssFeeds, err := loadConfig("configs/feeds.json")
 	if err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 	}
+
 	log.Println("config file loaded successfully")
 
 	// Fetch Feeds
@@ -103,12 +121,17 @@ func main() {
 	}
 
 	// Load Email Templates
-	t := loadTemplate()
+	t, tErr := loadTemplate()
+	if tErr != nil {
+		log.Fatalln(tErr)
+	}
+
 	writer := &strings.Builder{}
 	templateErr := t.Execute(writer, feeds)
 	if templateErr != nil {
-		log.Fatal(templateErr)
+		log.Fatalln(templateErr)
 	}
+
 	log.Println("email templates loaded successfully")
 
 	// Email
