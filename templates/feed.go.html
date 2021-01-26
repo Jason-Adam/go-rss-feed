@@ -1,18 +1,14 @@
 <div class="feed">
   <h1>{{.Title}}</h1>
-  {{ range .FilteredEntries }}
-    <div class="entry">
+  {{ range .Items}}
+    <div class="item">
       <h3>
-        {{if not .Links}}
+        {{if not .Link}}
           {{.Title}}
         {{else}}
-          <a href="{{(index .Links 0).HREF}}">{{.Title}}</a>
+          <a href="{{.Link}}">{{.Title}}</a>
         {{end}}
       </h3>
-      <em>
-        {{.Updated.LocalString}} by {{.Author.Name}}
-      </em>
-      <div class="entry-content">{{.Content.HTML}}</div>
     </div>
   {{ end }}
 </div>

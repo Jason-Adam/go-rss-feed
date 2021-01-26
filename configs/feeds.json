@@ -1,0 +1,9 @@
+{
+    "urls": [
+        "https://c-for-dummies.com/blog/?feed=rss2",
+        "https://threedots.tech/index.xml",
+        "https://blog.golang.org/feed.atom?format=xml",
+        "https://dave.cheney.net/feed/atom",
+        "https://changelog.com/gotime/feed"
+    ]
+}

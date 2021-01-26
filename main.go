@@ -1,115 +1,118 @@
 package main
 
 import (
-	"fmt"
-	"net/smtp"
+	"encoding/json"
+	"html/template"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/jason-adam/go-rss-feed/mail"
+	"github.com/jason-adam/go-rss-feed/models"
 	"github.com/mmcdole/gofeed"
 )
 
-var rssFeeds = []string{
-	"https://c-for-dummies.com/blog/?feed=rss2",
-	"https://threedots.tech/index.xml",
-	"https://blog.golang.org/feed.atom?format=xml",
-	"https://dave.cheney.net/feed/atom",
-	"https://changelog.com/gotime/feed",
-}
+var (
+	fromEmail    string = os.Getenv("MAIL_FROM")
+	fromPassword string = os.Getenv("MAIL_PASSWORD")
+	toEmail      string = os.Getenv("MAIL_TO")
+	port         string = os.Getenv("MAIL_PORT")
+	host         string = os.Getenv("MAIL_HOST")
+)
 
-type slimFeedItem struct {
-	title   string
-	link    string
-	pubDate time.Time
-}
-
-func newSlimFeedItem(title string, link string, pubDate time.Time) *slimFeedItem {
-	return &slimFeedItem{
-		title:   title,
-		link:    link,
-		pubDate: pubDate,
-	}
-}
-
-type finalArticle struct {
-	site          string
-	slimFeedItems []*slimFeedItem
-}
-
-func newFinalArticle(site string, slimFeedItems []*slimFeedItem) *finalArticle {
-	return &finalArticle{
-		site:          site,
-		slimFeedItems: slimFeedItems,
-	}
-}
-
-func mail(content string) error {
-	host := os.Getenv("MAIL_HOST")
-	port := os.Getenv("MAIL_PORT")
-	addr := host + ":" + port
-	to := os.Getenv("MAIL_TO")
-	from := os.Getenv("MAIL_FROM")
-	pw := os.Getenv("MAIL_PASSWORD")
-	auth := smtp.PlainAuth("", from, pw, host)
-
-	subject := "RSS Feeds for " + time.Now().Format("Jan 02, 2006")
-
-	msg := strings.Builder{}
-	msg.WriteString("From: \"Feed Update\" <" + from + ">\n")
-	msg.WriteString("To: " + to + "\n")
-	msg.WriteString("Subject: " + subject + "\n")
-	msg.WriteString("MIME-version: 1.0;\n")
-	msg.WriteString("Content-Type: text/html;charset=\"UTF-8\";\n")
-	msg.WriteString("\n")
-	msg.WriteString(content)
-
-	err := smtp.SendMail(addr, auth, from, []string{to}, []byte(msg.String()))
+func loadConfig(fname string) (*models.RSSFeeds, error) {
+	jsonFile, err := os.Open(fname)
 	if err != nil {
-		return err
+		log.Println(err)
+		return nil, err
 	}
-	return nil
+	defer jsonFile.Close()
+
+	byteValue, readErr := ioutil.ReadAll(jsonFile)
+	if readErr != nil {
+		log.Fatal(err)
+	}
+
+	var feeds models.RSSFeeds
+	json.Unmarshal(byteValue, &feeds)
+
+	return &feeds, nil
 }
 
-func filterFeed(feed *gofeed.Feed) []*slimFeedItem {
+// filterFeed updates the Items with only filtered entries.
+func filterFeed(feed *gofeed.Feed) {
 	cutoff := time.Now().Add(-24 * time.Hour)
-	filtered := make([]*slimFeedItem, 0)
+	filtered := []*gofeed.Item{}
 
 	for _, f := range feed.Items {
 		if time.Time(*f.PublishedParsed).After(cutoff) {
-			slimF := newSlimFeedItem(f.Title, f.Link, *f.PublishedParsed)
-			filtered = append(filtered, slimF)
+			filtered = append(filtered, f)
 		}
 	}
-
-	return filtered
+	feed.Items = filtered
+	return
 }
 
-func parseFeed(link string) (feed *gofeed.Feed, err error) {
+func parseFeed(url string, feedchan chan *gofeed.Feed) {
 	fp := gofeed.NewParser()
-	feed, feedErr := fp.ParseURL(link)
+	feed, feedErr := fp.ParseURL(url)
 	if feedErr != nil {
-		return nil, feedErr
+		log.Printf("failed to parse %s", url)
+		return
 	}
-	return feed, nil
+	feedchan <- feed
+}
+
+func parseFeeds(urls []string) []*gofeed.Feed {
+	feedchan := make(chan *gofeed.Feed, len(urls))
+
+	for _, u := range urls {
+		go parseFeed(u, feedchan)
+	}
+
+	feeds := []*gofeed.Feed{}
+	for i := 0; i < len(urls); i++ {
+		feeds = append(feeds, <-feedchan)
+	}
+	return feeds
+}
+
+func loadTemplate() *template.Template {
+	templates, err := filepath.Glob("templates/*")
+	if err != nil {
+		log.Println(err)
+	}
+	t := template.Must(template.New("layout.go.html").ParseFiles(templates...))
+	return t
 }
 
 func main() {
-	final := []*finalArticle{}
-
-	for _, l := range rssFeeds {
-		feed, err := parseFeed(l)
-		if err != nil {
-			fmt.Println(err)
-		}
-		ff := filterFeed(feed)
-		fa := newFinalArticle(l, ff)
-		final = append(final, fa)
+	// Load RSS Feed URLs
+	rssFeeds, err := loadConfig("configs/feeds.json")
+	if err != nil {
+		log.Println(err)
 	}
+	log.Println("config file loaded successfully")
 
-	for _, fa := range final {
-		for _, f := range fa.slimFeedItems {
-			fmt.Println(f.link)
-		}
+	// Fetch Feeds
+	feeds := parseFeeds(rssFeeds.Urls)
+
+	// Load Email Templates
+	t := loadTemplate()
+	writer := &strings.Builder{}
+	templateErr := t.Execute(writer, feeds)
+	if templateErr != nil {
+		log.Fatal(templateErr)
+	}
+	log.Println("email templates loaded successfully")
+
+	// Email
+	e := mail.NewEmailer(fromEmail, fromPassword, host, port)
+	mailErr := e.Send(writer.String(), toEmail)
+	if mailErr != nil {
+		log.Fatal(mailErr)
 	}
 }
