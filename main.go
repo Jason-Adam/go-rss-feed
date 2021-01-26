@@ -42,7 +42,6 @@ func loadConfig(fname string) (*models.RSSFeeds, error) {
 	return &feeds, nil
 }
 
-// filterFeed updates the Items with only filtered entries.
 func filterFeed(feed *gofeed.Feed) {
 	cutoff := time.Now().Add(-24 * time.Hour)
 	filtered := []*gofeed.Item{}
@@ -99,6 +98,9 @@ func main() {
 
 	// Fetch Feeds
 	feeds := parseFeeds(rssFeeds.Urls)
+	for _, f := range feeds {
+		filterFeed(f)
+	}
 
 	// Load Email Templates
 	t := loadTemplate()

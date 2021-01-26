@@ -4,6 +4,11 @@
         "https://threedots.tech/index.xml",
         "https://blog.golang.org/feed.atom?format=xml",
         "https://dave.cheney.net/feed/atom",
-        "https://changelog.com/gotime/feed"
+        "https://changelog.com/feed",
+        "https://eng.uber.com/feed/",
+        "http://feeds.feedburner.com/blogspot/gJZg",
+        "http://feeds.feedburner.com/GDBcode",
+        "https://martinfowler.com/feed.atom",
+        "https://www.toptal.com/blog.rss"
     ]
 }
