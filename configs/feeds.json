@@ -12,6 +12,10 @@
         "https://www.toptal.com/blog.rss",
         "https://openai.com/blog/rss/",
         "https://news.mit.edu/rss/topic/machine-learning",
-        "https://mlfromscratch.com/rss/"
+        "https://mlfromscratch.com/rss/",
+        "https://cloudblog.withgoogle.com/products/containers-kubernetes/rss/",
+        "https://cloudblog.withgoogle.com/products/ai-machine-learning/rss/",
+        "https://cloudblog.withgoogle.com/products/databases/rss/",
+        "https://blog.cleancoder.com/atom.xml"
     ]
 }
