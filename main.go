@@ -120,6 +120,14 @@ func main() {
 		filterFeed(f)
 	}
 
+	// Remove feeds with no new posts
+	f := feeds[:0]
+	for _, i := range feeds {
+		if i.Len() > 0 {
+			f = append(f, i)
+		}
+	}
+
 	// Load Email Templates
 	t, tErr := loadTemplate()
 	if tErr != nil {
@@ -127,7 +135,7 @@ func main() {
 	}
 
 	writer := &strings.Builder{}
-	templateErr := t.Execute(writer, feeds)
+	templateErr := t.Execute(writer, f)
 	if templateErr != nil {
 		log.Fatalln(templateErr)
 	}
