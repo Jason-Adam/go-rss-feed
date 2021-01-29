@@ -16,6 +16,9 @@
         "https://cloudblog.withgoogle.com/products/containers-kubernetes/rss/",
         "https://cloudblog.withgoogle.com/products/ai-machine-learning/rss/",
         "https://cloudblog.withgoogle.com/products/databases/rss/",
-        "https://blog.cleancoder.com/atom.xml"
+        "https://blog.cleancoder.com/atom.xml",
+        "https://fullstackfeed.com/category/ai/feed/",
+        "https://fullstackfeed.com/category/python/feed/",
+        "https://fullstackfeed.com/category/machine-learning/feed/"
     ]
 }
