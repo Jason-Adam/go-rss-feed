@@ -9,7 +9,6 @@
         "http://feeds.feedburner.com/blogspot/gJZg",
         "http://feeds.feedburner.com/GDBcode",
         "https://martinfowler.com/feed.atom",
-        "https://www.toptal.com/blog.rss",
         "https://openai.com/blog/rss/",
         "https://news.mit.edu/rss/topic/machine-learning",
         "https://mlfromscratch.com/rss/",
@@ -19,6 +18,7 @@
         "https://blog.cleancoder.com/atom.xml",
         "https://fullstackfeed.com/category/ai/feed/",
         "https://fullstackfeed.com/category/python/feed/",
-        "https://fullstackfeed.com/category/machine-learning/feed/"
+        "https://fullstackfeed.com/category/machine-learning/feed/",
+        "https://www.toptal.com/blog.rss"
     ]
 }
