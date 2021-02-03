@@ -33,6 +33,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./
+          asset_path: ./go-rss-feed-linux-arm64.tar.gz
           asset_name: go-rss-feed-linux-arm64.tar.gz
           asset_content_type: application/zip
