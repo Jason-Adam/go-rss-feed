@@ -23,7 +23,7 @@ var (
 	host         string = os.Getenv("MAIL_HOST")
 )
 
-type CompletedFeed struct {
+type completedFeed struct {
 	Success bool
 	Feed    *gofeed.Feed
 }
@@ -68,25 +68,25 @@ func filterFeed(feed *gofeed.Feed) {
 	return
 }
 
-func parseFeed(url string, feedchan chan *CompletedFeed) {
+func parseFeed(url string, feedchan chan *completedFeed) {
 	fp := gofeed.NewParser()
 	feed, feedErr := fp.ParseURL(url)
 	if feedErr != nil {
 		log.Printf("failed to parse %s", url)
-		feedchan <- &CompletedFeed{
+		feedchan <- &completedFeed{
 			Success: false,
 			Feed:    nil,
 		}
 	}
 	log.Printf("successfully parsed feed %s", url)
-	feedchan <- &CompletedFeed{
+	feedchan <- &completedFeed{
 		Success: true,
 		Feed:    feed,
 	}
 }
 
 func parseFeeds(urls []string) []*gofeed.Feed {
-	feedchan := make(chan *CompletedFeed, len(urls))
+	feedchan := make(chan *completedFeed, len(urls))
 
 	for _, u := range urls {
 		go parseFeed(u, feedchan)
