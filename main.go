@@ -120,7 +120,7 @@ func loadTemplate() (*template.Template, error) {
 
 func main() {
 	if err := godotenv.Load("dev.env"); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	var (
