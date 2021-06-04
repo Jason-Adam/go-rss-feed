@@ -12,15 +12,8 @@ import (
 
 	"github.com/jason-adam/go-rss-feed/mail"
 	"github.com/jason-adam/go-rss-feed/models"
+	"github.com/joho/godotenv"
 	"github.com/mmcdole/gofeed"
-)
-
-var (
-	fromEmail    string = os.Getenv("MAIL_FROM")
-	fromPassword string = os.Getenv("MAIL_PASSWORD")
-	toEmail      string = os.Getenv("MAIL_TO")
-	port         string = os.Getenv("MAIL_PORT")
-	host         string = os.Getenv("MAIL_HOST")
 )
 
 type completedFeed struct {
@@ -126,6 +119,18 @@ func loadTemplate() (*template.Template, error) {
 }
 
 func main() {
+	if err := godotenv.Load("dev.env"); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	var (
+		fromEmail    string = os.Getenv("MAIL_FROM")
+		fromPassword string = os.Getenv("MAIL_PASSWORD")
+		toEmail      string = os.Getenv("MAIL_TO")
+		port         string = os.Getenv("MAIL_PORT")
+		host         string = os.Getenv("MAIL_HOST")
+	)
+
 	// Load RSS Feed URLs
 	rssFeeds, err := loadConfig("configs/feeds.json")
 	if err != nil {
