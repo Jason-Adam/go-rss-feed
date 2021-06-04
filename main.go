@@ -65,6 +65,7 @@ func filterFeed(feed *gofeed.Feed) {
 	}
 
 	feed.Items = filtered
+
 	return
 }
 
