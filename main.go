@@ -71,13 +71,15 @@ func filterFeed(feed *gofeed.Feed) {
 func parseFeed(url string, feedchan chan *completedFeed) {
 	fp := gofeed.NewParser()
 	feed, feedErr := fp.ParseURL(url)
+
 	if feedErr != nil {
 		log.Printf("failed to parse %s", url)
 		feedchan <- &completedFeed{
 			Success: false,
-			Feed:    nil,
+			Feed:    &gofeed.Feed{},
 		}
 	}
+
 	log.Printf("successfully parsed feed %s", url)
 	feedchan <- &completedFeed{
 		Success: true,
@@ -99,6 +101,9 @@ func parseFeeds(urls []string) []*gofeed.Feed {
 			feeds = append(feeds, f.Feed)
 		}
 	}
+
+	log.Printf("got %d feeds successfully", len(feeds))
+
 	return feeds
 }
 
@@ -126,8 +131,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	log.Println("config file loaded successfully")
-
 	// Fetch Feeds
 	feeds := parseFeeds(rssFeeds.Urls)
 	for _, f := range feeds {
@@ -153,8 +156,6 @@ func main() {
 	if templateErr != nil {
 		log.Fatalln(templateErr)
 	}
-
-	log.Println("email templates loaded successfully")
 
 	// Email
 	e := mail.NewEmailer(fromEmail, fromPassword, host, port)
